@@ -35,17 +35,16 @@ def train(training, data_set, hidden_layer_weights, output_layer_weights, hidden
             expected = labels[idx]
             if predicted == expected:
                 correct_classified += 1
-            if not training:
-                break
-            t = compute_t(labels[idx], 10)
-            output_layer_errors = y_output - t # y_output * (1 - y_output) * (y_output - t)
-            # BACKPROPAGATION
-            hidden_layer_errors = y_hidden * (1 - y_hidden) * np.dot(output_layer_errors, output_layer_weights.T) # (1, 100)
-            # adjust weights
-            output_layer_weights = output_layer_weights - (lr * (output_layer_errors.T * y_hidden)).T # (100, 10)
-            output_layer_bias = output_layer_bias - (lr * output_layer_errors) # (1,10)
-            hidden_layer_weights = hidden_layer_weights - (lr * (hidden_layer_errors.T * input.T)).T # (784, 100)
-            hidden_layer_bias = hidden_layer_bias - (lr * hidden_layer_errors) # (1, 100)
+            if training:
+                t = compute_t(labels[idx], 10)
+                output_layer_errors = y_output - t
+                # BACKPROPAGATION
+                hidden_layer_errors = y_hidden * (1 - y_hidden) * np.dot(output_layer_errors, output_layer_weights.T) # (1, 100)
+                # adjust weights
+                output_layer_weights = output_layer_weights - (lr * (output_layer_errors.T * y_hidden)).T # (100, 10)
+                output_layer_bias = output_layer_bias - (lr * output_layer_errors) # (1,10)
+                hidden_layer_weights = hidden_layer_weights - (lr * (hidden_layer_errors.T * input.T)).T # (784, 100)
+                hidden_layer_bias = hidden_layer_bias - (lr * hidden_layer_errors) # (1, 100)
         percentage = correct_classified / data.shape[0] * 100
         nr_iterations += 1
         print("iteration:", nr_iterations, "correct classified:", correct_classified,
