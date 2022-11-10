@@ -18,13 +18,13 @@ def softmax_activation(z):
     return e_z / e_z.sum(axis=1)
 
 
-def feed_forward(data_set, hidden_layer_weights, output_layer_weights, hidden_layer_bias, output_layer_bias):
+def train(training, data_set, hidden_layer_weights, output_layer_weights, hidden_layer_bias, output_layer_bias):
     data = data_set[0]
     labels = data_set[1]
     sigmoid_all_elem = np.vectorize(sigmoid)
     nr_iterations = 0
 
-    while nr_iterations < 10:
+    while nr_iterations < 5:
         correct_classified = 0
         for idx, input in enumerate(data):
             z = np.dot(input, hidden_layer_weights) + hidden_layer_bias  # (1,784) x (784,100) + (1,100)
@@ -35,6 +35,8 @@ def feed_forward(data_set, hidden_layer_weights, output_layer_weights, hidden_la
             expected = labels[idx]
             if predicted == expected:
                 correct_classified += 1
+            if not training:
+                break
             t = compute_t(labels[idx], 10)
             output_layer_errors = y_output - t # y_output * (1 - y_output) * (y_output - t)
             # BACKPROPAGATION
@@ -48,23 +50,32 @@ def feed_forward(data_set, hidden_layer_weights, output_layer_weights, hidden_la
         nr_iterations += 1
         print("iteration:", nr_iterations, "correct classified:", correct_classified,
               "(" + str(percentage) + ")")
+        if not training:
+            break
+
+    return hidden_layer_weights, output_layer_weights, hidden_layer_bias, output_layer_bias
 
 
 with gzip.open('mnist.pkl.gz', 'rb') as fd:
     train_set, valid_set, test_set = pickle.load(fd, encoding='latin')
 
-# lr = np.random.default_rng().uniform(0.1, 0.3)
-lr = 0.5
-print("Learning rate", lr)
+lr = np.random.default_rng().uniform(0.1, 0.3)
 hidden_layer_weights = np.random.default_rng().uniform(-0.3, 0.3, (784, 100))
 output_layer_weights = np.random.default_rng().uniform(-0.3, 0.3, (100, 10))
 hidden_layer_bias = np.random.rand(1, 100)
 output_layer_bias = np.random.rand(1, 10)
 
+# lr = 0.5
 # train_set = (np.array([[2, 6]]), np.array([0]))
 # hidden_layer_weights = np.array([[-3, 6], [1, -2]])
 # output_layer_weights = np.array([[8], [4]])
 # hidden_layer_bias = np.array(0)
 # output_layer_bias = np.array(0)
 
-feed_forward(train_set, hidden_layer_weights, output_layer_weights, hidden_layer_bias, output_layer_bias)
+print("Learning rate", lr)
+print("TRAINING")
+hidden_layer_weights, output_layer_weights, hidden_layer_bias, output_layer_bias = train(True, train_set, hidden_layer_weights, output_layer_weights, hidden_layer_bias, output_layer_bias)
+print("VALIDATION")
+hidden_layer_weights, output_layer_weights, hidden_layer_bias, output_layer_bias = train(True, valid_set, hidden_layer_weights, output_layer_weights, hidden_layer_bias, output_layer_bias)
+print("TESTING")
+hidden_layer_weights, output_layer_weights, hidden_layer_bias, output_layer_bias = train(False, test_set, hidden_layer_weights, output_layer_weights, hidden_layer_bias, output_layer_bias)
